@@ -61,7 +61,7 @@ javascript:(function(){var script=document.createElement('script');script.onload
 var camera, scene, renderer;
 var k = 10;
 var opc = 0.5;
-var head, rightArm,leftArm, torso, leftleg,rightleg;
+var head, rightArm,leftArm, torso, leftleg,rightleg,mine;
 var soundVal = 1.0, sign = 1.0;
 var gcontrol;
 var isPaused = true;
@@ -181,6 +181,7 @@ function init() {
 		}
 		
 	}
+	scene.add(mine);
 	
 	isPaused = false;
 	
@@ -285,12 +286,12 @@ function makeTorso () {
 //	var mat = new THREE.MeshNormalMaterial({transparent:true, opacity:opc});
 	var cubeMaterials = 
 	[
-		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'image/people/b2.png' ),side: THREE.DoubleSide,transparent: true}),
-		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'image/people/b2.png' ),side: THREE.DoubleSide,transparent: true}),
-		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'image/people/b4.png' ),side: THREE.DoubleSide,transparent: true}),
-		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'image/people/b5.png' ),side: THREE.DoubleSide,transparent: true}),
-		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'image/people/b1.png' ),side: THREE.DoubleSide,transparent: true}),
-		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'image/people/b3.png' ),side: THREE.DoubleSide,transparent: true})
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'https://raw.githubusercontent.com/shiangshi/GameProgramming/master/image/people/b2.PNG' ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'https://raw.githubusercontent.com/shiangshi/GameProgramming/master/image/people/b2.PNG' ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'https://raw.githubusercontent.com/shiangshi/GameProgramming/master/image/people/b4.PNG' ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'https://raw.githubusercontent.com/shiangshi/GameProgramming/master/image/people/b5.PNG' ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'https://raw.githubusercontent.com/shiangshi/GameProgramming/master/image/people/b1.PNG' ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'https://raw.githubusercontent.com/shiangshi/GameProgramming/master/image/people/b3.PNG' ),side: THREE.DoubleSide,transparent: true})
 	]
 	var body = new THREE.Mesh (new THREE.BoxGeometry(2.52*k, 3.48*k, 1.26*k), cubeMaterials);
 	
