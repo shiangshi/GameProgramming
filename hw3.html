@@ -210,16 +210,20 @@ function init() {
 function makeArm() {
 	
 	var group = new THREE.Group();
-	
+	var Texture = new THREE.TextureLoader().load( 'image/people/l5.png' );
+	var Texture1 = new THREE.TextureLoader().load( 'image/people/l4.png' );
+	var Texture2 = new THREE.TextureLoader().load( 'image/people/l2.png' );
+	var Texture3 = new THREE.TextureLoader().load( 'image/people/l1.png' );
+	var Texture4 = new THREE.TextureLoader().load( 'image/people/l3.png' );
 //	var mat = new THREE.MeshNormalMaterial({transparent:true, opacity:opc});
 	var cubeMaterials = 
 	[
-		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'image/people/l5.png' ),side: THREE.DoubleSide,transparent: true}),
-		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'image/people/l4.png' ),side: THREE.DoubleSide,transparent: true}),
-		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'image/people/l2.png' ),side: THREE.DoubleSide,transparent: true}),
-		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'image/people/l2.png' ),side: THREE.DoubleSide,transparent: true}),
-		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'image/people/l1.png' ),side: THREE.DoubleSide,transparent: true}),
-		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( 'image/people/l3.png' ),side: THREE.DoubleSide,transparent: true})
+		new THREE.MeshLambertMaterial({ map: Texture,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture1,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture2,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture2,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture3,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture4,side: THREE.DoubleSide,transparent: true})
 	]
 	var body = new THREE.Mesh (new THREE.BoxGeometry(3.82*k, 1.24*k, 1.24*k), cubeMaterials);
     
