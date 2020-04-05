@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+
+<style>
+
+	#info {
+	  position: absolute;
+	  top: 0px;
+	  width: 100%;
+	  padding: 10px;
+	  text-align: center;
+	  font-size:60px;
+	  color: #ffffff
+	}
+	#gui {
+		position: absolute;
+		top: 30px;
+		left: 25%;
+	 // height: 350px;
+	}
+	body {
+	  overflow: hidden;
+	}
+
+
+</style>
+
+	<link type="text/css" rel="stylesheet" href="/css/main.css">
+	
+</head>
+
+<body> 
+
+	
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+	<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+	
+	<script src="js/Gyroscope.js"></script>
+	
+	
+	<div id="overlay">
+		<div>
+			<button id="startButton">Click to Play</button>
+		</div>
+	</div>
+	
+	<div id = 'info'> HW3 </div>
+	
+	
+  <script type="text/javascript">
+javascript:(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='https://mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
+
+
+var camera, scene, renderer;
+var k = 10;
+var opc = 0.5;
+var head, rightArm,leftArm, torso, leftleg,rightleg;
+var soundVal = 1.0, sign = 1.0;
+var gcontrol;
+var isPaused = true;
+var theta = 0;
+var mediaElement;
+var gyro;
+
+////////////////////
+
+var theta1 = 0,
+	theta2 = 0;
+var pose1 = {
+	theta1: .5,
+	theta2: -.8
+}
+var pose2 = {
+	theta1: -.8,
+	theta2: .8
+}
+var keys = [
+  [0, pose1],
+  [0.5, pose2],
+  [1, pose1]
+];
+var T = 120/155;
+var clock = new THREE.Clock();
+var ts = clock.getElapsedTime();  // start time
+var intKey = [];
+
+///////////////
+
+var startButton = document.getElementById( 'startButton' );
+startButton.addEventListener( 'click', init );
+startButton.addEventListener( 'click', animate );
+
+
+
+function init() {
+	
+	
+	var overlay = document.getElementById( 'overlay' );
+	overlay.remove();
+	
+	scene = new THREE.Scene();
+
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setClearColor(0xc7e8f0);
+	document.body.appendChild(renderer.domElement);
+	
+	mediaElement = new Audio( '/sound/Coffee_Stains.mp3' );
+	mediaElement.loop = true;
+	mediaElement.play();
+	
+	camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 1, 10000);
+	camera.position.y = 200;
+	camera.position.z = 500;
+	let controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+	////////////////////////////////////////////////////////////////
+	//var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
+	//scene.add(gridXZ);
+	var ambientLight = new THREE.AmbientLight( 0xcccccc );
+	scene.add( ambientLight );
+
+	var directionalLight = new THREE.DirectionalLight( 0xffffff, 2 );
+	directionalLight.position.set( 1, 1, 0.5 ).normalize();
+	scene.add( directionalLight );
+	
+	////////////////
+	mine = new THREE.Group();
+	head = makeHead();
+	torso = makeTorso();
+	mine.add (head, torso);
+	head.position.y = 7.57*k;
+	torso.position.y = 4.09*k;
+	  
+	leftArm = makeArm();
+	mine.add (leftArm);
+	leftArm.position.set (1.26*k+0.62*k, 7.57*k, 0);
+	rightArm = makeArm();
+	mine.add (rightArm);
+	rightArm.position.set(-1.26*k-0.62*k,7.57*k,0);
+	scene.add (mine);
+	leftleg = makeLeg();
+	leftleg.position.set (0.63*k, 4.09*k, 0);
+	mine.add (leftleg);
+	rightleg = makeLeg();
+	rightleg.position.set (-0.63*k, 4.09*k, 0);
+	mine.add (rightleg);
+
+	leftArm.rotation.z = -Math.PI/2;
+	rightArm.rotation.z = -Math.PI/2;
+	leftleg.rotation.z = -Math.PI/2;
+	rightleg.rotation.z = -Math.PI/2;
+	
+	leftArm.rotation.order = 'ZYX';
+	rightArm.rotation.order = 'ZYX';
+	leftleg.rotation.order = 'ZYX';
+	rightleg.rotation.order = 'ZYX';
+	/////////////////////
+	
+	var cube = makeFloor();
+	scene.add(cube);
+	var singleCube = makeCube();
+
+	for( j = 0 ; j < 2000 ; j+= 5*k){
+	
+		for( i = 5*k ; i < 1000 ; i+=10*k){
+			
+			var co = singleCube.clone();
+			co.position.set(-1000-i+2.5*k,i/2,1000-2.5*k-j);
+			var co1 = singleCube.clone();
+			co1.position.set(-1000-i-2.5*k,i/2,1000-2.5*k-j);
+			scene.add(co);
+			scene.add(co1);
+		}
+		
+	}
+	
+	isPaused = false;
+	
+	/////////////////////
+	gcontrol = {
+		volume: 0.2,
+	};
+	
+	var gui = new dat.GUI();
+	gui.domElement.id = 'gui';
+
+//	gui.remember (gcontrol);
+	  
+	gui.add(gcontrol, 'volume', 0, 0.8);
+	
+	
+	gyro = new THREE.Gyroscope();
+	scene.add (gyro);
+	gyro.add (camera);
+	torso.add (gyro);
+}
+
+
+
+
+
+function makeArm() {
+	
+	var group = new THREE.Group();
+//	var mat = new THREE.MeshNormalMaterial({transparent:true, opacity:opc});
+	var cubeMaterials = 
+	[
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/l5.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/l4.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/l2.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/l2.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/l1.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/l3.png" ),side: THREE.DoubleSide,transparent: true})
+	]
+	var body = new THREE.Mesh (new THREE.BoxGeometry(3.82*k, 1.24*k, 1.24*k), cubeMaterials);
+    
+	group.add (body);
+	body.position.x = 3.82*k/2;
+//	group.add (new THREE.AxesHelper (k));
+	return group;
+
+
+}
+
+function makeLeg() {
+	
+	var group = new THREE.Group();
+	//var mat = new THREE.MeshNormalMaterial({transparent:true, opacity:opc});
+	var cubeMaterials = 
+	[
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/ll5.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/ll4.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/ll2.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/ll2.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/ll1.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/ll3.png" ),side: THREE.DoubleSide,transparent: true})
+	]
+	var body = new THREE.Mesh (new THREE.BoxGeometry(4.09*k, 1.26*k, 1.26*k), cubeMaterials);
+  
+	group.add (body);
+	body.position.x = 4.09*k/2;
+//	group.add (new THREE.AxesHelper (k));
+	return group;
+
+
+}
+
+function makeHead() {
+	
+	var headGroup = new THREE.Group();
+	//var mat = new THREE.MeshNormalMaterial({transparent:true, opacity:opc});
+	var cubeMaterials = 
+	[
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/m2.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/m2.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/m4.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/m5.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/m1.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/m3.png" ),side: THREE.DoubleSide,transparent: true})
+	]
+	var headBody = new THREE.Mesh (new THREE.BoxGeometry(2.52*k, 2.52*k, 2.52*k), cubeMaterials);
+    
+	headGroup.add (headBody);
+	headBody.position.y = 2.52*k/2;
+	//headGroup.add (new THREE.AxesHelper (k));
+	return headGroup;
+}
+
+function makeTorso () {
+
+	var group = new THREE.Group();
+//	var mat = new THREE.MeshNormalMaterial({transparent:true, opacity:opc});
+	var cubeMaterials = 
+	[
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/b2.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/b2.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/b4.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/b5.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/b1.png" ),side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load( "image/people/b3.png" ),side: THREE.DoubleSide,transparent: true})
+	]
+	var body = new THREE.Mesh (new THREE.BoxGeometry(2.52*k, 3.48*k, 1.26*k), cubeMaterials);
+	
+	group.add (body);
+	body.position.y = 3.48*k/2;
+	//group.add (new THREE.AxesHelper (2*k));
+	return group;
+
+}
+
+function makeFloor(){
+
+	var Texture = new THREE.TextureLoader().load( 'image/cube/grass.png' );
+    Texture.wrapS = Texture.wrapT = THREE.RepeatWrapping;
+    Texture.repeat.set( 4*k, 4*k );
+	Texture.magFilter = THREE.NearestFilter;
+	var material = new THREE.MeshLambertMaterial({
+            map: Texture,
+            side: THREE.DoubleSide,
+			transparent: true,
+    });
+	
+	var Texture1 = new THREE.TextureLoader().load( 'image/cube/grass_dirt.png' );
+    Texture1.wrapS  = THREE.RepeatWrapping;
+    Texture1.repeat.set(4*k,1);
+	Texture1.magFilter = THREE.NearestFilter;
+	
+
+	var cubeMaterials = 
+	[
+		new THREE.MeshLambertMaterial({ map: Texture1,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture1,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture ,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture1,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture1,side: THREE.DoubleSide,transparent: true})
+	]
+	var cube = new THREE.Mesh(new THREE.BoxBufferGeometry(200*k,5*k,200*k,10*k), cubeMaterials);
+
+	cube.position.y = -2.5*k;
+
+	return cube;
+
+}
+
+function makeCube(){
+
+	var Texture = new THREE.TextureLoader().load( 'image/cube/grass.png' );
+	Texture.magFilter = THREE.NearestFilter;
+	var material = new THREE.MeshLambertMaterial({
+            map: Texture,
+            side: THREE.DoubleSide,
+			transparent: true,
+    });
+	
+	var Texture1 = new THREE.TextureLoader().load( 'image/cube/grass_dirt.png' );
+	Texture1.magFilter = THREE.NearestFilter;
+	
+	
+	var cubeMaterials = 
+	[
+		new THREE.MeshLambertMaterial({ map: Texture1,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture1,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture ,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture1,side: THREE.DoubleSide,transparent: true}),
+		new THREE.MeshLambertMaterial({ map: Texture1,side: THREE.DoubleSide,transparent: true})
+	]
+	var cube = new THREE.Mesh(new THREE.BoxBufferGeometry(5*k,5*k,5*k,5*k), cubeMaterials);
+
+	cube.position.y = -5*k;
+
+	return cube;
+
+}
+
+function keyframe(t) {
+	
+	var s = ((t - ts) % T) / T;
+
+	for (var i = 1; i < keys.length; i++) {
+    if (keys[i][0] > s) break;
+	}
+	// take i-1
+	var ii = i - 1;
+	var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
+	intKey = [keys[ii][1].theta1 * (1 - a) + keys[ii + 1][1].theta1 * a,
+			  keys[ii][1].theta2 * (1 - a) + keys[ii + 1][1].theta2 * a,
+	];
+
+}
+function animate() {
+  
+	if(isPaused == false){
+	soundVal += sign*0.01;
+	soundVal = THREE.Math.clamp (soundVal, 0, 1);
+	mediaElement.volume = soundVal*gcontrol.volume;
+	}
+	
+	theta +=0.005;
+	mine.position.set(-400*Math.cos(theta),0,400*Math.sin(theta));
+	mine.rotation.y = theta;
+	
+	keyframe(clock.getElapsedTime()); 
+	leftArm.rotation.y = intKey[0]//gcontrol.theta1; //Math.PI/4;
+	rightArm.rotation.y = -intKey[0];
+	leftleg.rotation.y = intKey[1]//gcontrol.theta2;//-Math.PI/4;
+	rightleg.rotation.y = -intKey[1]
+  
+	requestAnimationFrame(animate);
+	render();
+
+}
+
+
+function render() {
+
+  renderer.render(scene, camera);
+
+}
+
+
+</script>
+</body>
+
+</html>
