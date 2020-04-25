@@ -139,6 +139,7 @@ var  soundVal = 1.0, sign = 1.0;
 var light;
 
 
+
 init();
 animate();
 
@@ -232,7 +233,6 @@ function init() {
 	count ++;
 	
 	scene.add(wall);
-	
 	//前
 	
 	wall = new THREE.Mesh(new THREE.BoxGeometry(220,40,10),new THREE.MeshPhongMaterial({color: 0xebff91,opacity:0.3,transparent:true}));
@@ -248,7 +248,6 @@ function init() {
 	count ++;
 	
 	scene.add(wall);
-	
 	//後
 	
 	wall = new THREE.Mesh(new THREE.BoxGeometry(220,40,10),new THREE.MeshPhongMaterial({color: 0xebff91,opacity:0.3,transparent:true}));
